@@ -11,6 +11,11 @@ Optional:
     - key_id
     - start_date
     - type
+    - timeouts (block):
+        - create (optional)
+        - delete (optional)
+        - read (optional)
+        - update (optional)
 EOT
 
   type = map(object({
@@ -22,14 +27,28 @@ EOT
     key_id            = optional(string)
     start_date        = optional(string)
     type              = optional(string)
+    timeouts = optional(object({
+      create = optional(string)
+      delete = optional(string)
+      read   = optional(string)
+      update = optional(string)
+    }))
   }))
+  validation {
+    condition = alltrue([
+      for k, v in var.application_certificates : (
+        can(regex("^(/[^/]+/[^/]+)+$", v.application_id))
+      )
+    ])
+    error_message = "must be a valid Azure resource ID"
+  }
   validation {
     condition = alltrue([
       for k, v in var.application_certificates : (
         v.encoding == null || (contains(["base64", "hex", "pem"], v.encoding))
       )
     ])
-    error_message = "must be one of: base64, hex, pem"
+    error_message = "must be one of: \"base64\", \"hex\", \"pem\""
   }
   validation {
     condition = alltrue([
@@ -53,8 +72,8 @@ EOT
         v.type == null || (contains(["AsymmetricX509Cert", "Symmetric"], v.type))
       )
     ])
-    error_message = "must be one of: AsymmetricX509Cert, Symmetric"
+    error_message = "must be one of: \"AsymmetricX509Cert\", \"Symmetric\""
   }
-  # Note: 4 additional provider-side validators are enforced at apply time but not mirrored as validation{} blocks here (bespoke or non-mechanically-translatable).
+  # Note: 2 additional provider-side validators are enforced at apply time but not mirrored as validation{} blocks here (bespoke or non-mechanically-translatable).
 }
 

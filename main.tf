@@ -9,5 +9,15 @@ resource "azuread_application_certificate" "application_certificates" {
   key_id            = each.value.key_id
   start_date        = each.value.start_date
   type              = each.value.type
+
+  dynamic "timeouts" {
+    for_each = each.value.timeouts != null ? [each.value.timeouts] : []
+    content {
+      create = timeouts.value.create
+      delete = timeouts.value.delete
+      read   = timeouts.value.read
+      update = timeouts.value.update
+    }
+  }
 }
 
